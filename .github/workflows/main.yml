@@ -1,25 +1,38 @@
+# This workflow will build a Java project with Maven
+# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
+
 name: Java CI with Maven
 
 on:
   push:
-    branches: master
+    branches: [main, dev]
   pull_request:
-    branches: master
 
 jobs:
-  build:
-
+  maven_test:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    
-    - name: Set up JDK 11
-      uses: actions/setup-java@v2
-      with:
-        java-version: '11'
-        distribution: 'adopt'
-        cache: maven
-    
-    - name: Run tests with Maven
-      run: mvn -B test --file pom.xml
+      - name: Checkout latest code
+        uses: actions/checkout@v2
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      ## Use a cache to reduce the build/test times (avoids having to download dependencies on EVERY run).
+      ### https://help.github.com/en/actions/language-and-framework-guides/building-and-testing-java-with-maven#caching-dependencies
+      - name: Cache Maven packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+      - name: Test with Maven
+        run: mvn --errors clean test
+      ## Upload coverage to codecov.io (Would require an account)
+      # - name: Upload to CodeCov
+      #   uses: codecov/codecov-action@v1
+      #   timeout-minutes: 10
+      #   with:
+      #     token: ${{ secrets.CODECOV_TOKEN }}
+      #     files: target/site/jacoco/jacoco.xml
